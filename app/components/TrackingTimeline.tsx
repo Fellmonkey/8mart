@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, Clock, Truck, PawPrint, Package } from "lucide-react";
-import { useEffect, useState, useMemo } from "react";
+import { type ReactNode, useEffect, useState, useMemo } from "react";
 
 interface TrackingTimelineProps {
   name: string;
@@ -12,7 +12,23 @@ interface TrackingTimelineProps {
 interface Status {
   time: string;
   text: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
+}
+
+function vibrate(pattern: number | number[]) {
+  if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+    navigator.vibrate(pattern);
+  }
+}
+
+function playSound(src: string) {
+  try {
+    const audio = new Audio(src);
+    audio.volume = 0.6;
+    audio.play().catch(() => {});
+  } catch {
+    // ignore
+  }
 }
 
 function generateTimeline(): Status[] {
@@ -42,31 +58,26 @@ function generateTimeline(): Status[] {
 export default function TrackingTimeline({ name, onComplete }: TrackingTimelineProps) {
   const [visibleCount, setVisibleCount] = useState(0);
   const timeline = useMemo(() => generateTimeline(), []);
-
-  const vibrate = (pattern: number | number[]) => {
-    if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate(pattern);
-    }
-  };
+  const isDone = visibleCount >= timeline.length;
 
   useEffect(() => {
     if (visibleCount >= timeline.length) {
       vibrate([100, 50, 100, 50, 200]);
-      const t = setTimeout(onComplete, 1200);
-      return () => clearTimeout(t);
+      return;
     }
 
     const delay = visibleCount === timeline.length - 1 ? 1000 : 700;
     const t = setTimeout(() => {
       vibrate(30);
+      playSound("/notification.mp3");
       setVisibleCount((c) => c + 1);
     }, delay);
 
     return () => clearTimeout(t);
-  }, [visibleCount, timeline.length, onComplete]);
+  }, [visibleCount, timeline.length]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-8">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -96,7 +107,7 @@ export default function TrackingTimeline({ name, onComplete }: TrackingTimelineP
               const isLast = idx === timeline.length - 1;
               return (
                 <motion.div
-                  key={idx}
+                  key={status.time}
                   initial={{ opacity: 0, y: 30, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
@@ -133,6 +144,18 @@ export default function TrackingTimeline({ name, onComplete }: TrackingTimelineP
           )}
         </div>
       </div>
+
+      {isDone && (
+        <motion.button
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 200, damping: 18 }}
+          onClick={onComplete}
+          className="mt-6 cursor-pointer rounded-full bg-pink px-8 py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-pink-dark hover:shadow-lg active:scale-95"
+        >
+          Дальше →
+        </motion.button>
+      )}
     </div>
   );
 }

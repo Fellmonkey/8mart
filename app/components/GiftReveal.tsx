@@ -12,23 +12,26 @@ interface GiftRevealProps {
 }
 
 export default function GiftReveal({ name, message, certificate }: GiftRevealProps) {
-  const [windowSize, setWindowSize] = useState({ w: 400, h: 800 });
+  const [windowSize] = useState(() =>
+    typeof window !== "undefined"
+      ? { w: window.innerWidth, h: window.innerHeight }
+      : { w: 400, h: 800 }
+  );
   const [showConfetti, setShowConfetti] = useState(true);
 
   useEffect(() => {
-    setWindowSize({ w: window.innerWidth, h: window.innerHeight });
     const t = setTimeout(() => setShowConfetti(false), 6000);
     return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
-    if (typeof navigator !== "undefined" && navigator.vibrate) {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate([100, 50, 100, 50, 100, 50, 200]);
     }
   }, []);
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-10">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-y-auto px-4 py-10">
       {showConfetti && (
         <ReactConfetti
           width={windowSize.w}

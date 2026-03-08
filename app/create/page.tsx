@@ -26,9 +26,26 @@ export default function CreatePage() {
 
   const copyToClipboard = useCallback(async () => {
     if (!link) return;
-    await navigator.clipboard.writeText(link);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(link);
+      } else {
+        // Fallback for Safari / non-HTTPS
+        const el = document.createElement("textarea");
+        el.value = link;
+        el.setAttribute("readonly", "");
+        el.style.cssText = "position:absolute;left:-9999px;top:-9999px";
+        document.body.appendChild(el);
+        el.select();
+        el.setSelectionRange(0, el.value.length); // iOS
+        document.execCommand("copy");
+        document.body.removeChild(el);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // ignore
+    }
   }, [link]);
 
   const isValid = name.trim() && message.trim() && certificate.trim();

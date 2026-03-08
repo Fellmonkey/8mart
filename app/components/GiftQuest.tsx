@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { decodeGift } from "@/app/lib/gift";
 import TrackingTimeline from "@/app/components/TrackingTimeline";
@@ -22,9 +22,35 @@ export default function GiftQuest() {
     return decodeGift(encoded);
   }, [searchParams]);
 
-  const goToVideo = useCallback(() => setStage("video"), []);
-  const goToBox = useCallback(() => setStage("box"), []);
-  const goToReveal = useCallback(() => setStage("reveal"), []);
+  const musicRef = useRef<HTMLAudioElement | null>(null);
+
+  const startMusic = useCallback(() => {
+    if (musicRef.current) return;
+    try {
+      const audio = new Audio("/music.m4a");
+      audio.loop = true;
+      audio.volume = 0.5;
+      audio.play().catch(() => {});
+      musicRef.current = audio;
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const goToVideo = useCallback(() => {
+    startMusic();
+    setStage("video");
+  }, [startMusic]);
+
+  const goToBox = useCallback(() => {
+    startMusic();
+    setStage("box");
+  }, [startMusic]);
+
+  const goToReveal = useCallback(() => {
+    startMusic();
+    setStage("reveal");
+  }, [startMusic]);
 
   if (!gift) {
     return (

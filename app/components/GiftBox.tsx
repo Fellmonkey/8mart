@@ -7,12 +7,13 @@ interface GiftBoxProps {
   onOpen: () => void;
 }
 
+function vibrate() {
+  if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+    navigator.vibrate([50, 30, 50]);
+  }
+}
+
 export default function GiftBox({ onOpen }: GiftBoxProps) {
-  const vibrate = () => {
-    if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate([50, 30, 50]);
-    }
-  };
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4">
