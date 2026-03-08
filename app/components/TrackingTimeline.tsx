@@ -45,6 +45,10 @@ function generateTimeline(): Status[] {
     // available minutes since midnight
     const availableSinceMidnight = Math.max(0, Math.floor((now.getTime() - midnight.getTime()) / 60000));
 
+    // If the day has progressed more than maxSpanMinutes, we'll randomize minutes for
+    // each status (user asked for random minutes when > 6 hours have passed).
+    const useRandomMinutes = availableSinceMidnight > maxSpanMinutes;
+
     let spanMinutes = Math.min(defaultSpanMinutes, maxSpanMinutes);
     if (availableSinceMidnight > 0 && availableSinceMidnight < spanMinutes) spanMinutes = availableSinceMidnight;
     // if nothing is available (shouldn't happen), fall back to small span
@@ -59,7 +63,18 @@ function generateTimeline(): Status[] {
     for (let i = 0; i < count; i++) {
       const t = new Date(start.getTime() + i * interval * 60000);
       const hh = String(t.getHours()).padStart(2, "0");
-      const mm = String(t.getMinutes()).padStart(2, "0");
+      let mm: string;
+      if (useRandomMinutes) {
+        const rnd = Math.floor(Math.random() * 60);
+        // if generated time would be in the future, clamp to current minute
+        if (t.getHours() === now.getHours() && rnd > now.getMinutes()) {
+          mm = String(now.getMinutes()).padStart(2, "0");
+        } else {
+          mm = String(rnd).padStart(2, "0");
+        }
+      } else {
+        mm = String(t.getMinutes()).padStart(2, "0");
+      }
       times.push(`${hh}:${mm}`);
     }
 
