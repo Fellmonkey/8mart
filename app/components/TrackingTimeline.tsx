@@ -33,18 +33,35 @@ function playSound(src: string) {
 
 function generateTimeline(): Status[] {
   const now = new Date();
-  const h = now.getHours();
   const m = now.getMinutes();
 
-  // Dynamic times based on when the page was opened (but within March 8)
-  const baseHour = Math.max(8, h - 5);
-  const times = [
-    `${String(baseHour).padStart(2, "0")}:00`,
-    `${String(baseHour + 1).padStart(2, "0")}:15`,
-    `${String(Math.min(baseHour + 3, 23)).padStart(2, "0")}:30`,
-    `${String(Math.min(h, 23)).padStart(2, "0")}:${String(Math.max(m - 5, 0)).padStart(2, "0")}`,
-    `${String(Math.min(h, 23)).padStart(2, "0")}:${String(m).padStart(2, "0")}`,
-  ];
+    const count = 5;
+    const maxSpanMinutes = 6 * 60; // don't span more than 6 hours
+    const defaultSpanMinutes = 4 * 60; // default 4 hours
+
+    const midnight = new Date(now);
+    midnight.setHours(0, 0, 0, 0);
+
+    // available minutes since midnight
+    const availableSinceMidnight = Math.max(0, Math.floor((now.getTime() - midnight.getTime()) / 60000));
+
+    let spanMinutes = Math.min(defaultSpanMinutes, maxSpanMinutes);
+    if (availableSinceMidnight > 0 && availableSinceMidnight < spanMinutes) spanMinutes = availableSinceMidnight;
+    // if nothing is available (shouldn't happen), fall back to small span
+    if (spanMinutes <= 0) spanMinutes = Math.max(5, Math.floor(m || 5));
+
+    let start = new Date(now.getTime() - spanMinutes * 60000);
+    if (start < midnight) start = midnight;
+
+    const interval = Math.max(1, Math.round(spanMinutes / (count - 1)));
+
+    const times: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const t = new Date(start.getTime() + i * interval * 60000);
+      const hh = String(t.getHours()).padStart(2, "0");
+      const mm = String(t.getMinutes()).padStart(2, "0");
+      times.push(`${hh}:${mm}`);
+    }
 
   return [
     { time: times[0], text: "Посылка принята в отделении «КотоПочты» 🐈", icon: <Package size={20} /> },

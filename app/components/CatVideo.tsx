@@ -32,6 +32,7 @@ export default function CatVideo({ onComplete }: CatVideoProps) {
               src="/cat.mp4"
               autoPlay
               muted
+              loop
               playsInline
               onError={() => setVideoError(true)}
             />

@@ -31,7 +31,3 @@ body {
 .animate-pulse-box {
   animation: pulse-box 1.5s ease-in-out infinite;
 }
-
-html {
-  overflow: hidden;
-}

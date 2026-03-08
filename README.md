@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🐾 КотоПочта — Персональная доставка с 8 Марта
 
-## Getting Started
+Веб-приложение для создания персонализированных поздравлений с 8 Марта в виде интерактивного квеста доставки. Получательница открывает ссылку и «получает посылку» от курьера Барсика.
 
-First, run the development server:
+## Цель
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Удивить подругу / девушку / коллегу красивым, анимированным поздравлением без бэкенда и регистраций. Вся персонализация (имя, поздравление, подарок) зашита прямо в URL — никаких баз данных, никаких серверов.
+
+## Как это работает
+
+1. Создатель заходит на `/create`, заполняет форму (имя, поздравление, название подарка)
+2. Приложение упаковывает данные в JSON → UTF-8 → Base64 URL-safe и генерирует ссылку вида `твойсайт.com/?gift=eyJuIjoiTWFzaGEi...`
+3. Ссылка отправляется получательнице
+4. Получательница открывает ссылку и проходит квест:
+   - **Трекинг** — смешные статусы доставки «КотоПочты» появляются с пружинной анимацией (время подстраивается под текущий час)
+   - **Видео** — вертикальный рилс с котом-курьером; играет фоновая музыка
+   - **Коробка** — пульсирующий подарок, нужно нажать чтобы открыть
+   - **Финал** — конфетти на весь экран, персональное поздравление и сертификат на подарок
+
+## Технологический стек
+
+| Слой | Технология |
+|------|-----------|
+| Движок | Next.js 16 (App Router) |
+| Стили | Tailwind CSS v4 |
+| Анимации | Framer Motion (spring physics) |
+| Конфетти | react-confetti |
+| Иконки | lucide-react |
+| Кодирование данных | btoa / atob + TextEncoder (нативный браузер) |
+| Хостинг | Vercel |
+
+## Структура проекта
+
+```
+app/
+├── page.tsx                  # Главная страница — декодирует ?gift= и запускает квест
+├── layout.tsx                # Root layout, метаданные
+├── globals.css               # Tailwind + кастомная палитра (розовый, лаванда, зелёный)
+├── lib/
+│   └── gift.ts               # encodeGift / decodeGift — URL-safe Base64 с поддержкой кириллицы
+├── components/
+│   ├── GiftQuest.tsx         # Оркестратор стадий: tracking → video → box → reveal
+│   ├── TrackingTimeline.tsx  # Анимированные статусы доставки + звук notification.mp3
+│   ├── CatVideo.tsx          # Вертикальное видео 9:16 с котом (public/cat.mp4)
+│   ├── GiftBox.tsx           # Пульсирующая коробка — тап для открытия
+│   └── GiftReveal.tsx        # Конфетти + поздравление + сертификат
+└── create/
+    └── page.tsx              # Генератор ссылок (форма → кодирование → копирование)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Медиафайлы (добавить в /public)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Файл | Назначение |
+|------|-----------|
+| `public/cat.mp4` | Вертикальное видео с котом (9:16, рекомендуемое) |
+| `public/music.m4a` | Фоновая музыка — играет с экрана видео до конца на повторе |
+| `public/notification.mp3` | Короткий звук при каждом новом статусе трекинга |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Быстрый старт
 
-## Learn More
+```bash
+npm install
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Открой `http://localhost:3000/create`, создай ссылку и отправь её!
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Деплой
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+# Push на GitHub, затем импорт в Vercel — деплой в один клик
+vercel --prod
+```
